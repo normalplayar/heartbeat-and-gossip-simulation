@@ -11,9 +11,9 @@ PEERS = [int(p) for p in sys.argv[3].split(",")]
 CRASH = sys.argv[4] == "true"
 
 GOSSIP_INTERVAL = 0.5
-TIMEOUT = 15.0
-RUN_TIME = 120
-CRASH_TIME = 30
+TIMEOUT = 6.0
+RUN_TIME = 240
+CRASH_TIME = 60
 LOSS_PROB = 0.1
 
 alive = {p: time.time() for p in PEERS}

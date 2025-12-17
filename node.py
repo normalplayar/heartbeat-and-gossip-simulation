@@ -13,9 +13,9 @@ PEERS = [int(p) for p in sys.argv[3].split(",")]
 CRASH_NODE = sys.argv[4] == "true"
 
 HEARTBEAT_INTERVAL = 0.5    
-TIMEOUT = 15.0              
-RUN_TIME = 120              
-CRASH_TIME = 30             
+TIMEOUT = 6.0             
+RUN_TIME = 240              
+CRASH_TIME = 60             
 PACKET_LOSS = 0.1           
 
 last_seen = {}

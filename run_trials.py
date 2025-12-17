@@ -6,7 +6,7 @@ import time
 PYTHON = sys.executable
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-NUM_TRIALS = 1
+NUM_TRIALS = 10
 
 CONCISE_FILE = os.path.join(BASE_DIR, "experiments_concise.csv")
 
