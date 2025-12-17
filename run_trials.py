@@ -6,10 +6,9 @@ import time
 PYTHON = sys.executable
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-NUM_TRIALS = 5
+NUM_TRIALS = 1
 
 CONCISE_FILE = os.path.join(BASE_DIR, "experiments_concise.csv")
-
 
 def _assert_concise_created(protocol: str):
     """Ensure experiments_concise.csv exists after each analysis step."""
@@ -96,4 +95,3 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         print("\n\nTrials interrupted by user.")
         sys.exit(1)
-

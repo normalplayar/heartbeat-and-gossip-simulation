@@ -21,7 +21,6 @@ for df in logs.values():
 if CRASH_TIME is None:
     raise RuntimeError("Crash time missing")
 
-false_positives = 0
 total_suspects = 0
 latencies = []
 
@@ -47,7 +46,6 @@ for node, df in logs.items():
         t = row["time"]
 
         if target != CRASH_NODE:
-            false_positives += 1
             fp_by_observer[node] = fp_by_observer.get(node, 0) + 1
             fp_by_target[target] = fp_by_target.get(target, 0) + 1
 
@@ -56,16 +54,6 @@ for node, df in logs.items():
 
 print("=== HEARTBEAT RESULTS ===")
 print("Total SUSPECT events:", total_suspects)
-print("False positives:", false_positives)
-
-if total_suspects > 0:
-    fp_rate = false_positives / total_suspects
-    print("False positive rate (fraction of SUSPECTs):", round(fp_rate, 3))
-else:
-    print("False positive rate: N/A (no SUSPECT events)")
-
-print("False positives by observing node (healthy nodes):", fp_by_observer)
-print("False positives by target node:", fp_by_target)
 
 all_times = []
 for df in logs.values():
@@ -78,21 +66,7 @@ if len(all_times) >= 2:
 else:
     total_duration = 0.0
 
-if total_duration > 0:
-    fp_per_hour = false_positives / (total_duration / 3600.0)
-    print("False positives per hour:", round(fp_per_hour, 3))
-else:
-    fp_per_hour = None
-    print("False positives per hour: N/A (duration zero)")
-
 failures = sum((df["event"] == "CRASH").sum() for df in logs.values())
-if failures > 0:
-    fp_per_failure = false_positives / failures
-    print("False positives per failure:", round(fp_per_failure, 3))
-else:
-    fp_per_failure = None
-    print("False positives per failure: N/A (no failures recorded)")
-
 print("Detection latencies:", [round(float(x), 3) for x in latencies])
 
 mean_latency = median_latency = p99_latency = p999_latency = None
@@ -143,10 +117,6 @@ summary_exists = os.path.exists(summary_file)
 
 summary_row = {
     "total_suspects": total_suspects,
-    "false_positives": false_positives,
-    "fp_rate": fp_rate if total_suspects > 0 else None,
-    "fp_per_hour": fp_per_hour,
-    "fp_per_failure": fp_per_failure,
     "mean_latency": mean_latency,
     "median_latency": median_latency,
     "p99_latency": p99_latency,
@@ -182,8 +152,6 @@ concise_row = {
     "Latencies": latencies_str,
     "Mean Latency": mean_latency,
     "Message Overhead": message_overhead,
-    "False Positives": false_positives,
-    "False Positive Rate": fp_rate if total_suspects > 0 else None,
 }
 
 concise_df = pd.DataFrame([concise_row])
