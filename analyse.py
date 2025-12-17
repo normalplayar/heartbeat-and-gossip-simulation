@@ -76,13 +76,14 @@ if len(latencies) > 0:
     median_latency = float(np.median(lat_arr))
     p99_latency = float(np.percentile(lat_arr, 99))
     p999_latency = float(np.percentile(lat_arr, 99.9))
-
+    print("Sucessful Detection: Yes")
     print("Mean latency:", round(mean_latency, 3))
     print("Median latency:", round(median_latency, 3))
     print("99th percentile latency:", round(p99_latency, 3))
     print("99.9th percentile latency:", round(p999_latency, 3))
 
 else:
+    print("Sucessful Detection: No")
     print("Mean latency: N/A (no detections of crashed node)")
     print("Median latency: N/A")
     print("99th percentile latency: N/A")
