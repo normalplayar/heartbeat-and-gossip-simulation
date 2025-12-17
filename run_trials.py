@@ -26,7 +26,6 @@ def run_heartbeat_trial(trial_num):
     print(f"HEARTBEAT TRIAL {trial_num}/{NUM_TRIALS}")
     print(f"{'='*60}")
     
-    # Run the launcher
     print("Starting heartbeat nodes...")
     launcher = subprocess.Popen(
         [PYTHON, os.path.join(BASE_DIR, "launcher.py")],
@@ -34,10 +33,8 @@ def run_heartbeat_trial(trial_num):
     )
     launcher.wait()
     
-    # Wait a moment for files to be written
     time.sleep(1)
     
-    # Run analysis
     print("Analyzing heartbeat trial...")
     analyzer = subprocess.Popen(
         [PYTHON, os.path.join(BASE_DIR, "analyse.py")],
@@ -54,7 +51,6 @@ def run_gossip_trial(trial_num):
     print(f"GOSSIP TRIAL {trial_num}/{NUM_TRIALS}")
     print(f"{'='*60}")
     
-    # Run the launcher
     print("Starting gossip nodes...")
     launcher = subprocess.Popen(
         [PYTHON, os.path.join(BASE_DIR, "gossip_launcher.py")],
@@ -62,10 +58,8 @@ def run_gossip_trial(trial_num):
     )
     launcher.wait()
     
-    # Wait a moment for files to be written
     time.sleep(1)
     
-    # Run analysis
     print("Analyzing gossip trial...")
     analyzer = subprocess.Popen(
         [PYTHON, os.path.join(BASE_DIR, "analyze_gossip.py")],
@@ -81,26 +75,20 @@ def main():
     print(f"Running {NUM_TRIALS} trials each for Heartbeat and Gossip")
     print("="*60)
     
-    # Run heartbeat trials
-    # Comment out heartbeat trials for now
     print("\n>>> Starting Heartbeat Trials <<<")
     for i in range(1, NUM_TRIALS + 1):
         run_heartbeat_trial(i)
         time.sleep(2)
     
-    # Run gossip trials
     print("\n>>> Starting Gossip Trials <<<")
     for i in range(1, NUM_TRIALS + 1):
         run_gossip_trial(i)
-        time.sleep(2)  # Brief pause between trials
+        time.sleep(2)
     
     print("\n" + "="*60)
     print("All trials completed!")
     print("="*60)
     print(f"\nConcise results appended to: {CONCISE_FILE}")
-    print("\nYou can now run:")
-    print("  - aggregate_heartbeat_latencies.py (to see aggregated heartbeat results)")
-    print("  - aggregate_gossip_latencies.py (to see aggregated gossip results)")
 
 if __name__ == "__main__":
     try:

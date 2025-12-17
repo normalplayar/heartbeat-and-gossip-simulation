@@ -3,20 +3,16 @@ import glob
 import os
 import numpy as np
 
-# For gossip, nodes identify peers by UDP port, so we treat the crashed
-# node as its port number string ("5002" for node2 on port 5002).
 CRASH_NODE = "5002"
 CRASH_TIME = None
 
 logs = {}
 
-# load gossip logs
 for file in glob.glob("gossip_node*.csv"):
     node = file.replace(".csv", "")
     df = pd.read_csv(file)
     logs[node] = df
 
-# find crash time
 for df in logs.values():
     crash_rows = df[df["event"] == "CRASH"]
     if len(crash_rows) > 0:
@@ -111,10 +107,6 @@ if len(latencies) > 0:
     print("Median latency:", round(median_latency, 3))
     print("99th percentile latency:", round(p99_latency, 3))
     print("99.9th percentile latency:", round(p999_latency, 3))
-
-    # Note: Statistical comparison with heartbeat protocol should be done using
-    # aggregate_heartbeat_latencies.py and aggregate_gossip_latencies.py
-    # which compare heartbeat vs gossip latencies across multiple runs
 else:
     print("Mean latency: N/A (no detections of crashed node)")
     print("Median latency: N/A")
@@ -139,7 +131,6 @@ avg_msg_rate = float(sum(message_rates.values()) / len(message_rates)) if messag
 summary_file = "gossip_experiments.csv"
 summary_exists = os.path.exists(summary_file)
 
-# ---- Save per-run gossip latencies so we can aggregate across many runs ----
 latency_file = "gossip_all_latencies.csv"
 latency_df = pd.DataFrame({"latency": [float(x) for x in latencies]})
 if os.path.exists(latency_file):
@@ -171,10 +162,6 @@ if summary_exists:
 else:
     summary_df.to_csv(summary_file, index=False)
 
-# ---- Save concise row for user-requested summary format ----
-# Columns:
-# ['Protocol', 'Nodes', 'Trial', 'Latencies',
-#  'Mean Latency', 'Message Overhead', 'False Positives', 'False Positive Rate']
 concise_file = "experiments_concise.csv"
 concise_exists = os.path.exists(concise_file)
 

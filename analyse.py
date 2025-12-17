@@ -8,13 +8,11 @@ CRASH_TIME = None
 
 logs = {}
 
-# load logs
 for file in glob.glob("node*.csv"):
     node = file.replace(".csv", "")
     df = pd.read_csv(file)
     logs[node] = df
 
-# find crash time
 for df in logs.values():
     crash_rows = df[df["event"] == "CRASH"]
     if len(crash_rows) > 0:
@@ -27,22 +25,18 @@ false_positives = 0
 total_suspects = 0
 latencies = []
 
-# for FP-by-node stats
 fp_by_observer = {}
 fp_by_target = {}
 
-# for message-overhead stats
 send_counts = {}
 durations = {}
 
 for node, df in logs.items():
-    # duration per node (for rates)
     if not df.empty:
         durations[node] = df["time"].max() - df["time"].min()
     else:
         durations[node] = 0.0
 
-    # count SEND events for message overhead
     send_counts[node] = (df["event"] == "SEND").sum()
 
     suspects = df[df["event"] == "SUSPECT"]
@@ -54,7 +48,6 @@ for node, df in logs.items():
 
         if target != CRASH_NODE:
             false_positives += 1
-            # false positives attributed to observing node and target
             fp_by_observer[node] = fp_by_observer.get(node, 0) + 1
             fp_by_target[target] = fp_by_target.get(target, 0) + 1
 
@@ -71,11 +64,9 @@ if total_suspects > 0:
 else:
     print("False positive rate: N/A (no SUSPECT events)")
 
-# false positives at healthy nodes separately (per observing node)
 print("False positives by observing node (healthy nodes):", fp_by_observer)
 print("False positives by target node:", fp_by_target)
 
-# experiment duration for FP per hour
 all_times = []
 for df in logs.values():
     if not df.empty:
@@ -94,7 +85,6 @@ else:
     fp_per_hour = None
     print("False positives per hour: N/A (duration zero)")
 
-# assuming one crash (one failure) in these experiments
 failures = sum((df["event"] == "CRASH").sum() for df in logs.values())
 if failures > 0:
     fp_per_failure = false_positives / failures
@@ -118,9 +108,6 @@ if len(latencies) > 0:
     print("99th percentile latency:", round(p99_latency, 3))
     print("99.9th percentile latency:", round(p999_latency, 3))
 
-    # Note: Statistical comparison with gossip protocol should be done using
-    # aggregate_heartbeat_latencies.py and aggregate_gossip_latencies.py
-    # which compare heartbeat vs gossip latencies across multiple runs
 else:
     print("Mean latency: N/A (no detections of crashed node)")
     print("Median latency: N/A")
@@ -129,7 +116,6 @@ else:
     print("Mann–Whitney U statistic: N/A (no detections)")
     print("p value: N/A (no detections)")
 
-# message overhead: messages per node per second
 message_rates = {}
 for node, send_count in send_counts.items():
     dur = durations.get(node, 0.0)
@@ -143,7 +129,6 @@ print("Message overhead (messages per node per second):", pretty_rates)
 
 avg_msg_rate = float(sum(message_rates.values()) / len(message_rates)) if message_rates else None
 
-# ---- Save per-run latencies so we can aggregate across many runs ----
 latency_file = "heartbeat_all_latencies.csv"
 latency_df = pd.DataFrame({"latency": [float(x) for x in latencies]})
 if os.path.exists(latency_file):
@@ -153,7 +138,6 @@ if os.path.exists(latency_file):
 else:
     latency_df.to_csv(latency_file, index=False)
 
-# ---- Save summary so multiple experiments accumulate in one CSV ----
 summary_file = "heartbeat_experiments.csv"
 summary_exists = os.path.exists(summary_file)
 
@@ -179,17 +163,12 @@ if summary_exists:
 else:
     summary_df.to_csv(summary_file, index=False)
 
-# ---- Save concise row for user-requested summary format ----
-# Columns:
-# ['Protocol', 'Nodes', 'Trial', 'Latencies',
-#  'Mean Latency', 'Message Overhead', 'False Positives', 'False Positive Rate']
 concise_file = "experiments_concise.csv"
 concise_exists = os.path.exists(concise_file)
 
 trial_number = 1
 if concise_exists:
     existing_concise = pd.read_csv(concise_file)
-    # Determine next trial number for this protocol
     protocol_rows = existing_concise[existing_concise["Protocol"] == "heartbeat"]
     trial_number = int(protocol_rows["Trial"].max()) + 1 if not protocol_rows.empty else 1
 

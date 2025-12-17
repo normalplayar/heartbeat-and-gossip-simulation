@@ -7,36 +7,29 @@ import random
 import os
 import signal
 
-# ---------- Arguments ----------
 NODE_ID = sys.argv[1]
 PORT = int(sys.argv[2])
 PEERS = [int(p) for p in sys.argv[3].split(",")]
 CRASH_NODE = sys.argv[4] == "true"
 
-# ---------- Parameters ----------
 HEARTBEAT_INTERVAL = 0.5
 TIMEOUT = 6.0
+RUN_TIME = 240       
+CRASH_TIME = 60       
+PACKET_LOSS = 0.1     
 
-RUN_TIME = 240        # 3 minutes
-CRASH_TIME = 60       # crash at midpoint
-PACKET_LOSS = 0.1     # 10 percent loss
-
-# ---------- State ----------
 last_seen = {}
 suspected = set()
 start_time = time.time()
 crashed = False
 
-# ---------- Socket ----------
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 sock.bind(("127.0.0.1", PORT))
 sock.settimeout(0.2)
 sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
-# ---------- CSV ----------
 csv_file = open(f"{NODE_ID}_heartbeat.csv", "w", newline="")
 writer = csv.writer(csv_file)
-# latency = time between last message received from target and time we suspect it
 writer.writerow(["time", "event", "target", "latency"])
 
 
@@ -51,7 +44,6 @@ def log_event(event, target, latency=None):
         writer.writerow([time.time(), event, target, latency])
     csv_file.flush()
 
-# ---------- Threads ----------
 def listener():
     while time.time() - start_time < RUN_TIME and not crashed:
         try:
@@ -66,11 +58,6 @@ def listener():
         except socket.timeout:
             pass
         except OSError as e:
-            # On Windows, when the socket is closed from another thread,
-            # recvfrom() can raise errors like:
-            # - 10054: WSAECONNRESET
-            # - 10038: WSAENOTSOCK (operation on non-socket)
-            # These are expected during shutdown, so we just exit the loop.
             winerr = getattr(e, "winerror", None)
             if winerr in (10054, 10038):
                 break
@@ -82,20 +69,16 @@ def sender():
             if random.random() < PACKET_LOSS:
                 continue
             sock.sendto(NODE_ID.encode(), ("127.0.0.1", p))
-            # record message overhead: one SEND per actual UDP send
             log_event("SEND", p)
         time.sleep(HEARTBEAT_INTERVAL)
 
 def detector():
     while time.time() - start_time < RUN_TIME and not crashed:
         now = time.time()
-        # Run failure detection over known peers by their NODE_ID strings,
-        # which matches what we log in the CSV and what the analyser expects.
         for peer_id, last in list(last_seen.items()):
             if now - last > TIMEOUT and peer_id not in suspected:
                 suspected.add(peer_id)
                 latency = now - last
-                # latency is how long since we last heard from this peer
                 log_event("SUSPECT", peer_id, latency)
         time.sleep(0.1)
 
@@ -112,7 +95,6 @@ def crash_injector():
     sock.close()
     os.kill(os.getpid(), signal.SIGTERM)
 
-# ---------- Start ----------
 threads = [
     threading.Thread(target=listener),
     threading.Thread(target=sender),

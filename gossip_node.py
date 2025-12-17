@@ -10,13 +10,10 @@ PORT = int(sys.argv[2])
 PEERS = [int(p) for p in sys.argv[3].split(",")]
 CRASH = sys.argv[4] == "true"
 
-RUN_TIME = 240
-CRASH_TIME = 60
-
-# Tuned for larger clusters (e.g., 15 nodes): faster gossip and slightly
-# lower loss help ensure the crashed node is detected reliably.
 GOSSIP_INTERVAL = 0.5
 TIMEOUT = 6.0
+RUN_TIME = 240
+CRASH_TIME = 60
 LOSS_PROB = 0.05
 
 alive = {p: time.time() for p in PEERS}
@@ -57,8 +54,6 @@ def listener():
         except socket.timeout:
             continue
         except OSError as e:
-            # On Windows, closing the socket from another thread can cause
-            # recvfrom() to raise connection-reset / not-a-socket errors.
             winerr = getattr(e, "winerror", None)
             if winerr in (10054, 10038):
                 break
@@ -81,7 +76,6 @@ def gossiper():
 
         msg = "|".join(payload).encode()
         sock.sendto(msg, ("127.0.0.1", peer))
-        # record message overhead: one SEND per actual UDP send
         log("SEND", peer)
 
         time.sleep(GOSSIP_INTERVAL)
@@ -92,7 +86,7 @@ def detector():
         for p, ts in alive.items():
             if now - ts > TIMEOUT and p not in suspected:
                 suspected.add(p)
-                latency = now - ts  # time since we last heard from p
+                latency = now - ts
                 log("SUSPECT", p, latency)
         time.sleep(0.5)
 
